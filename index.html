@@ -40,6 +40,14 @@
                     pom.click();
                 }
             }
+            const minimaxFromArr = (arr) => {
+                let mini = arr[0], maxi = arr[0];
+                for (var i = 0; i < arr.length; i++) {
+                    if (arr[i] < mini) mini = arr[i];
+                    else if (arr[i] > maxi) maxi = arr[i];
+                }
+                return [mini, maxi];
+            }
             const thead = document.getElementById("thead");
             const tbody = document.getElementById("tbody");
             const floatToTime = (x) => {
@@ -61,9 +69,11 @@
             };
 
             const parse = async () => {
+                // initialization, table header generation
                 window.scrollTo(0, 0);
                 const resp = await fetch("scores.json");
                 const scores = await resp.json();
+                const isFinal = scores.isFinalRound;
                 if (scores.showNow) {
                     document.getElementsByTagName("table")[0].style = "display: none;";
                     document.getElementById("message").innerHTML = scores.showNowText;
@@ -95,19 +105,24 @@
                 thead.appendChild(tr);
                 tbody.innerHTML = "";
                 const minimums = [];
+                // loop over and sum times from array
                 for (let i = 0; i < scores.scores.length; i++) {
                     let currentSum = 0;
+                    const minmax = minimaxFromArr(scores.scores[i].times);
                     for (let j = 0; j < stages; j++) {
                         let flag = true;
                         if (typeof scores.scores[i].times[j] === "undefined") {
                             scores.scores[i].times[j] = 9999;
                             flag = false;
-                        }
+                        } else
+                            if (isFinal && (minmax.includes(scores.scores[i].times[j])))
+                                flag = false;
+                        
                         if (flag) currentSum += scores.scores[i].times[j];
                     }
                     scores.scores[i].sum = currentSum;
                 }
-
+                // find the best time
                 for (let i = 0; i < stages; i++) {
                     let mini = 9999;
                     for (let j = 0; j < scores.scores.length; j++) {
@@ -116,13 +131,12 @@
                     }
                     minimums.push(mini);
                 }
-
-
+                // sort the array in ascending order (better times go first)
                 scores.scores.sort((a, b) => a.sum - b.sum);
-
+                // add the places of the contestants
                 for (let i = 0; i < scores.scores.length; i++)
                     scores.scores[i].place = (i + 1).toString();
-
+                // generate table
                 for (let i = 0; i < scores.scores.length; i++) {
                     const score = scores.scores[i];
                     const tr = document.createElement("tr");
@@ -142,6 +156,7 @@
                     td_sum.innerText = floatToTime(score.sum);
                     tr.appendChild(td_sum);
                     tbody.appendChild(tr);
+                    // add qualification lines
                     if (scores.Qplaces.indexOf(i + 1) != -1) {
                         const tr = document.createElement("tr");
                         tr.style = "line-height: 3vh;";
@@ -154,6 +169,7 @@
                         tbody.appendChild(tr);
                     }
                 }
+                // update global scores object, used when downloading the sorted scores.json
                 scores_Glb = JSON.stringify(scores, null, 4);
             };
             setInterval(() => {
