@@ -169,7 +169,14 @@
                         tbody.appendChild(tr);
                     }
                 }
-                // update global scores object, used when downloading the sorted scores.json
+                // delete leftover variables
+                for (let i = 0; i < scores.scores.length; i++) {
+                    delete scores.scores[i].sum;
+                    delete scores.scores[i].place;
+                }
+                // only leave the first `scores.leaveOnlyFirst' scores
+                scores.scores = scores.scores.slice(0, scores.leaveOnlyFirst);
+                // update the global scores object, used in the process of downloading the processed array
                 scores_Glb = JSON.stringify(scores, null, 4);
             };
             setInterval(() => {

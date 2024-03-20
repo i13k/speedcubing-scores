@@ -5,7 +5,8 @@
     "Qcolors": ["gold", "gray"],
     "bestColor": "#541756",
     "bestTextColor": "#ffffff",
-    "isFinalRound": true,
+    "isFinalRound": false,
+    "leaveOnlyFirst": 61,
     "scores":[
         {"name":"Jan Kowalski","times":         [192.24, 162.32]},
         {"name":"Konrad Goliński","times":      [195.2, 59.49]},
