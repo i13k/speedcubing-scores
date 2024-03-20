@@ -1,0 +1,21 @@
+{
+    "showNow": false,
+    "showNowText": "GRUPA b2",
+    "Qplaces": [10, 30],
+    "Qcolors": ["gold", "gray"],
+    "bestColor": "#541756",
+    "bestTextColor": "#ffffff",
+    "scores":[
+        {"name":"Jan Kowalski","times":         [192.24, 162.32]},
+        {"name":"Konrad Goliński","times":      [195.2, 59.49]},
+        {"name":"Józef Stalin", "times":        [252.31, 69.69]},
+        {"name":"Adam Mickiewicz","times":      [103.23, 15.51, 10.32]},
+        {"name":"Jan Nowak-Jeziorański","times":[101.49, 42.23]},
+        {"name":"Mateusz Marek Nowicki","times":[12.52, 26.32]},
+        {"name":"Osoba Testowa","times":        [32.21, 36.32]},
+        {"name":"Jan Nowak-Jeziorański","times":[101.49]},
+        {"name":"Mateusz Marek Nowicki","times":[12.52, 26.32]},
+        {"name":"Osoba Testowa","times":        [32.21, 36.32, 4.12]},
+        {"name":"Mikołaj Marciniak","times":    [23.43, 104.20, 60.00]}
+    ]
+}

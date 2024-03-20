@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<!--
+    F - force reload
+    I - save sorted scores.json
+-->
+<html>
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="stylesheet" href="bootstrap.min.css" type="text/css" />
+        <title>Results</title>
+        <style>
+            * {
+                font-size: 30px;
+            }
+        </style>
+    </head>
+    <body>
+        <table class="table table-bordered table-striped">
+            <thead id="thead">
+            </thead>
+            <tbody id="tbody">
+            </tbody>
+        </table>
+        <center>
+            <div id="message"></div>
+        </center>
+        <script type="text/javascript">
+            let scores_Glb = "";
+            function download(filename, text) {
+                var pom = document.createElement('a');
+                pom.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+                pom.setAttribute('download', filename);
+                if (document.createEvent) {
+                    var event = document.createEvent('MouseEvents');
+                    event.initEvent('click', true, true);
+                    pom.dispatchEvent(event);
+                }
+                else {
+                    pom.click();
+                }
+            }
+            const thead = document.getElementById("thead");
+            const tbody = document.getElementById("tbody");
+            const floatToTime = (x) => {
+                if (x == 9999) return "&mdash;"
+                let minutes = Math.floor(x / 60);
+                let seconds = x - (60 * minutes);
+                let millis = Math.floor((x - Math.floor(x)) * 100);
+                minutes = minutes.toString();
+                seconds = seconds.toString();
+                millis = millis.toString();
+                if (parseInt(seconds) < 10) seconds = "0" + seconds;
+                if (millis == 0) millis = "00";
+                if (millis < 10) millis = "0" + millis;
+                return minutes + ":" + seconds[0] + seconds[1] + "," + millis[0] + millis[1];
+            };
+            document.onkeydown = async (e) => {
+                if (e.keyCode == 70) parse();
+                else if (e.keyCode == 73) download("scores.json", scores_Glb);
+            };
+
+            const parse = async () => {
+                window.scrollTo(0, 0);
+                const resp = await fetch("scores.json");
+                const scores = await resp.json();
+                if (scores.showNow) {
+                    document.getElementsByTagName("table")[0].style = "display: none;";
+                    document.getElementById("message").innerHTML = scores.showNowText;
+                    document.getElementById("message").style = "display: block;";
+                    return;
+                } else {
+                    document.getElementsByTagName("table")[0].style = "";
+                    document.getElementById("message").style = "display: none;";
+                }
+                let stages = 0;
+                for (let i = 0; i < scores.scores.length; i++)
+                    if (scores.scores[i].times.length > stages) stages = scores.scores[i].times.length;
+                thead.innerHTML = "";
+                const tr = document.createElement("tr");
+                const th_m = document.createElement("th");
+                th_m.innerText = "m-ce";
+                const th_u = document.createElement("th");
+                th_u.innerText = "uczestnik";
+                tr.appendChild(th_m);
+                tr.appendChild(th_u);
+                for (let i = 0; i < stages; i++) {
+                    const thTmp = document.createElement("th");
+                    thTmp.innerHTML = (i + 1).toString();
+                    tr.appendChild(thTmp);
+                }
+                const th_sum = document.createElement("th");
+                th_sum.innerText = "=";
+                tr.appendChild(th_sum);
+                thead.appendChild(tr);
+                tbody.innerHTML = "";
+                const minimums = [];
+                for (let i = 0; i < scores.scores.length; i++) {
+                    let currentSum = 0;
+                    for (let j = 0; j < stages; j++) {
+                        let flag = true;
+                        if (typeof scores.scores[i].times[j] === "undefined") {
+                            scores.scores[i].times[j] = 9999;
+                            flag = false;
+                        }
+                        if (flag) currentSum += scores.scores[i].times[j];
+                    }
+                    scores.scores[i].sum = currentSum;
+                }
+
+                for (let i = 0; i < stages; i++) {
+                    let mini = 9999;
+                    for (let j = 0; j < scores.scores.length; j++) {
+                        if (scores.scores[j].times[i] < mini)
+                            mini = scores.scores[j].times[i];
+                    }
+                    minimums.push(mini);
+                }
+
+
+                scores.scores.sort((a, b) => a.sum - b.sum);
+
+                for (let i = 0; i < scores.scores.length; i++)
+                    scores.scores[i].place = (i + 1).toString();
+
+                for (let i = 0; i < scores.scores.length; i++) {
+                    const score = scores.scores[i];
+                    const tr = document.createElement("tr");
+                    const th_m = document.createElement("td");
+                    const th_u = document.createElement("td");
+                    th_m.innerHTML = score.place;
+                    th_u.innerHTML = score.name;
+                    tr.appendChild(th_m);
+                    tr.appendChild(th_u);
+                    for (let j = 0; j < stages; j++) {
+                        const thTmp = document.createElement("td");
+                        if (score.times[j] == minimums[j]) thTmp.style = "background-color: " + scores.bestColor + "; color: " + scores.bestTextColor + ";";
+                        thTmp.innerHTML = floatToTime(score.times[j]);
+                        tr.appendChild(thTmp);
+                    }
+                    const td_sum = document.createElement("td");
+                    td_sum.innerText = floatToTime(score.sum);
+                    tr.appendChild(td_sum);
+                    tbody.appendChild(tr);
+                    if (scores.Qplaces.indexOf(i + 1) != -1) {
+                        const tr = document.createElement("tr");
+                        tr.style = "line-height: 3vh;";
+                        for (let j = 0; j < stages + 3; j++) {
+                            const td = document.createElement("td");
+                            td.style = "background-color: " + scores.Qcolors[scores.Qplaces.indexOf(i + 1)] + ";color:#ffffff;";
+                            if (j == 0) td.innerText = "Q" + (i + 1).toString();
+                            tr.appendChild(td);
+                        }
+                        tbody.appendChild(tr);
+                    }
+                }
+                scores_Glb = JSON.stringify(scores, null, 4);
+            };
+            setInterval(() => {
+                if (window.innerHeight + window.pageYOffset >= document.body.offsetHeight)
+                    parse();
+                else window.scrollBy(0, 100);
+            }, 5000);
+            parse();
+        </script>
+    </body>
+</html>
